@@ -5,6 +5,7 @@ import gspread
 from datetime import datetime
 from oauth2client.service_account import ServiceAccountCredentials
 import json
+import gdown
 # service account json credentials 
 # SERVICE_ACCOUNT_FILE = 'accesspysheet-bd152702637a.json'
 # # Authenticate with the Google Sheets API
@@ -20,25 +21,30 @@ import json
 # # Extract all data as a list of list
 # data = worksheet.get_all_values()
 
-# Load secrets
-gcp_secrets = st.secrets["gcp_service_account"]
+# # Load secrets
+# gcp_secrets = st.secrets["gcp_service_account"]
 
-# Convert TOML to JSON format for gspread
-credentials_dict = {key: gcp_secrets[key] for key in gcp_secrets}
-credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")
+# # Convert TOML to JSON format for gspread
+# credentials_dict = {key: gcp_secrets[key] for key in gcp_secrets}
+# credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")
 
-# Authenticate with gspread
-creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"])
-client = gspread.authorize(creds)
+# # Authenticate with gspread
+# creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"])
+# client = gspread.authorize(creds)
 
-# Open Google Sheet by URL
+# # Open Google Sheet by URL
     
-# Open Google Sheet
-sheet = client.open("SAMC Scholarly Activity Form").worksheet("Sheet1")
-data = sheet.get_all_records()
+# # Open Google Sheet
+# sheet = client.open("SAMC Scholarly Activity Form").worksheet("Sheet1")
+# data = sheet.get_all_records()
 
+url = 'https://docs.google.com/spreadsheets/d/1h4HlBY1_vOAuFmWQxTgHRr3075wgfxfroIWmHZm4b98/edit?usp=sharing'
+
+file_id = url.split('/')[-2]
+url = f'https://docs.google.com/spreadsheets/d/{file_id}/gviz/tq?tqx=out:csv'
+df = pd.read_csv(url)
 # Convert to a Pandas DataFrame
-df = pd.DataFrame(data[1:], columns=data[0])
+#df = pd.DataFrame(data[1:], columns=data[0])
 df = df.drop_duplicates(subset=df.columns[0])
 # Convert the 'Submitted at' column to datetime
 df['Submitted at'] = pd.to_datetime(df['Submitted at'], format='%Y-%m-%d %H:%M:%S', errors='coerce')
@@ -54,7 +60,7 @@ st.write(f"## Total Registrants: {count_yes}/{(len(df))}")
 
 
 # Convert to a Pandas DataFrame
-df = pd.DataFrame(data[1:], columns=data[0])
+#df = pd.DataFrame(data[1:], columns=data[0])
 
 # Drop duplicates based on the first column Submission ID
 df = df.drop_duplicates(subset=df.columns[0])
@@ -66,7 +72,7 @@ df['What is your working project title?'] = df['What is your working project tit
 df['Submitted at'] = pd.to_datetime(df['Submitted at'], format='%Y-%m-%d %H:%M:%S', errors='coerce')
 
 # Merge columns from indices 11 and 14 into a new column called 'CATEGORY'
-df['STUDY_TYPE'] = df.iloc[:, [11, 14]].apply(lambda x: ' '.join(x), axis=1)
+df['STUDY_TYPE'] = df.iloc[:, [11, 14]].apply(lambda x: ' '.join(x.astype(str)), axis=1)
 
 # Select the specified columns by their indices
 selected_columns = [3, 4, 8, 9, 84, 88]
