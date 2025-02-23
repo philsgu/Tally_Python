@@ -3,21 +3,39 @@ import pandas as pd
 import gspread
 #from fuzzywuzzy import fuzz
 from datetime import datetime
-
+from oauth2client.service_account import ServiceAccountCredentials
+import json
 # service account json credentials 
-SERVICE_ACCOUNT_FILE = 'accesspysheet-bd152702637a.json'
-# Authenticate with the Google Sheets API
-gc = gspread.service_account(filename=SERVICE_ACCOUNT_FILE)
+# SERVICE_ACCOUNT_FILE = 'accesspysheet-bd152702637a.json'
+# # Authenticate with the Google Sheets API
+# gc = gspread.service_account(filename=SERVICE_ACCOUNT_FILE)
 
-# Open the Google Sheet by URL
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1h4HlBY1_vOAuFmWQxTgHRr3075wgfxfroIWmHZm4b98/edit?gid=0#gid=0"
-sh = gc.open_by_url(SHEET_URL)
+# # Open the Google Sheet by URL
+# SHEET_URL = "https://docs.google.com/spreadsheets/d/1h4HlBY1_vOAuFmWQxTgHRr3075wgfxfroIWmHZm4b98/edit?gid=0#gid=0"
+# sh = gc.open_by_url(SHEET_URL)
 
 # Select the first worksheet
-worksheet = sh.get_worksheet(0)
+# worksheet = sh.get_worksheet(0)
 
-# Extract all data as a list of list
-data = worksheet.get_all_values()
+# # Extract all data as a list of list
+# data = worksheet.get_all_values()
+
+# Load secrets
+gcp_secrets = st.secrets["gcp_service_account"]
+
+# Convert TOML to JSON format for gspread
+credentials_dict = {key: gcp_secrets[key] for key in gcp_secrets}
+credentials_dict["private_key"] = credentials_dict["private_key"].replace("\\n", "\n")
+
+# Authenticate with gspread
+creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scopes=["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"])
+client = gspread.authorize(creds)
+
+# Open Google Sheet by URL
+    
+# Open Google Sheet
+sheet = client.open("SAMC Scholarly Activity Form").worksheet("Sheet1")
+data = sheet.get_all_records()
 
 # Convert to a Pandas DataFrame
 df = pd.DataFrame(data[1:], columns=data[0])
@@ -34,11 +52,6 @@ count_yes = df[df.iloc[:, 84] == "YES"].shape[0]
 st.write(f"## Total Registrants: {count_yes}/{(len(df))}")
 # Filter the original dataframe to only include rows where the submission for research day is "YES"
 
-# Select the first worksheet
-worksheet = sh.get_worksheet(0)
-
-# Extract all data as a list of lists
-data = worksheet.get_all_values()
 
 # Convert to a Pandas DataFrame
 df = pd.DataFrame(data[1:], columns=data[0])
