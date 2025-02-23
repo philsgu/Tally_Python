@@ -84,7 +84,7 @@ new_df.columns = column_renames
 # Display the new dataframe
 new_df.rename(columns=dict(zip(new_df.columns, column_renames)), inplace=True)
 # Remove spaces and unnecessary strings in the 'Category' column
-new_df['Category'] = new_df['Category'].str.replace(r'\s+', '', regex=True).str.replace(r'[^a-zA-Z]', '', regex=True)
+new_df['Category'] = new_df['Category'].fillna('').str.replace(r'\s+', '', regex=True).str.replace(r'[^a-zA-Z]', '', regex=True)
 new_df_yes = new_df[new_df['RD_Submit'] == 'YES']
 pivot_table = new_df_yes.pivot_table(index='Dept', columns=['Category'], aggfunc='size', fill_value=0)
 # Add a new column 'Total' to get the total count for each department
